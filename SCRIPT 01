@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+import vs
+
+# Parameters
+LAYER_NAME  = 'ZZ_Material_Vertical_Stack'
+BLOCK_SIZE  = 1.0    # width & height in meters
+BLOCK_DEPTH = 1.0    # extrude thickness in meters (1 m cube)
+GAP_Y       = 1.0    # vertical gap in meters
+SAFE_LIMIT  = 1500    # cap to avoid thousands at once
+START_X     = 0.0
+START_Y     = 0.0
+
+def create_block(x, y, size_xy, depth):
+    vs.BeginXtrd(0.0, depth)
+    vs.Rect(0.0, 0.0, size_xy, size_xy)  # rectangle 1×1 m in Top/Plan
+    vs.EndXtrd()
+    h = vs.LNewObj()
+    if h:
+        vs.HMove(h, x, y)                # position in XY
+    return h
+
+def main():
+    # Work on a Design Layer
+    vs.Layer(LAYER_NAME)
+
+    # Count Materials stored in this document (resource type 19)
+    lst_id, cnt = vs.BuildResourceList(19, 0, '')
+
+    # Decide how many blocks to create
+    to_make = min(cnt, SAFE_LIMIT)
+
+    # Step (block height + gap)
+    step_y = BLOCK_SIZE + GAP_Y
+
+    # Create blocks in a vertical line (in screen Y)
+    for i in range(to_make):
+        x = START_X
+        y = START_Y + i * step_y
+        create_block(x, y, BLOCK_SIZE, BLOCK_DEPTH)
+
+    vs.ReDraw()
+    vs.AlrtDialog('Materials counted: {} | Blocks created: {} | Gap: {} m'
+                  .format(cnt, to_make, GAP_Y))
+
+main()
